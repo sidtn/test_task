@@ -12,14 +12,26 @@ def cast_deleter(path_to_project_dir):
             if file.endswith(".py"):
                 path_file = os.path.join(root, file)
                 list_with_paths_py_files.append(path_file)
+    count_strings = 0
     for file in list_with_paths_py_files:
         f = open(file, 'r', encoding='utf-8')
-        pattern = r"(cast\(.+?,\s|\))"
-        code = re.sub(pattern, '', f.read())
+        pattern = r"cast\(.+?,\s.+\)"
+        new_py_file = ''
+        for line in f:
+            result = re.search(pattern, line)
+            if result:
+                string_for_replace = result.group(0).split()[-1].strip(')') + '\n'
+                new_line = line.replace(result.group(0), string_for_replace)
+                new_py_file += new_line
+                count_strings += 1
+            else:
+                new_py_file += line
         f.close()
         os.remove(file)
         with open(file, 'w', encoding='utf-8') as f:
-            f.write(code)
+            f.write(new_py_file)
+    print(f'DONE! {count_strings} lines were rewritten')
+    print(f'Path to project - {path_to_project_dir}_without_typecast')
 
 
 if __name__ == '__main__':
